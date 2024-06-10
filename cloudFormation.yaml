@@ -150,7 +150,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub "sg-${AWS::StackName}"
-    S3Bucket1:
+  S3Bucket1:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: Private
