@@ -150,6 +150,30 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub "sg-${AWS::StackName}"
+    S3Bucket1:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+      BucketName: !Sub "bucket-${AWS::StackName}-raw"
+      Tags:
+        - Key: Name
+          Value: !Sub "bucket-${AWS::StackName}-raw"  
+  S3Bucket2:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+      BucketName: !Sub bucket-${AWS::StackName}-trusted
+      Tags:
+        - Key: Name
+          Value: !Sub bucket-${AWS::StackName}-trusted
+  S3Bucket3:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+      BucketName: !Sub "bucket-${AWS::StackName}-client"
+      Tags:
+        - Key: Name
+          Value: !Sub "bucket-${AWS::StackName}-client"
   Instance1:
     DependsOn: [RouteTableAssociationPublicSubnet, InstanceSecurityGroup]
     Type: AWS::EC2::Instance
@@ -221,27 +245,3 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-jupyter-notebooks"
-  S3Bucket1:
-    Type: AWS::S3::Bucket
-    Properties:
-      AccessControl: Private
-      BucketName: !Sub "bucket-${AWS::StackName}-raw"
-      Tags:
-        - Key: Name
-          Value: !Sub "bucket-${AWS::StackName}-raw"  
-  S3Bucket2:
-    Type: AWS::S3::Bucket
-    Properties:
-      AccessControl: Private
-      BucketName: !Sub bucket-${AWS::StackName}-trusted
-      Tags:
-        - Key: Name
-          Value: !Sub bucket-${AWS::StackName}-trusted
-  S3Bucket3:
-    Type: AWS::S3::Bucket
-    Properties:
-      AccessControl: Private
-      BucketName: !Sub "bucket-${AWS::StackName}-client"
-      Tags:
-        - Key: Name
-          Value: !Sub "bucket-${AWS::StackName}-client"
