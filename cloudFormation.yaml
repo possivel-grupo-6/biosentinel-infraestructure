@@ -162,10 +162,10 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: Private
-      BucketName: !Sub bucket-${AWS::StackName}-trusted
+      BucketName: !Sub "bucket-${AWS::StackName}-trusted"
       Tags:
         - Key: Name
-          Value: !Sub bucket-${AWS::StackName}-trusted
+          Value: !Sub "bucket-${AWS::StackName}-trusted"
   S3Bucket3:
     Type: AWS::S3::Bucket
     Properties:
