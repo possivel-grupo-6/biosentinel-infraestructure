@@ -23,6 +23,6 @@ jobs:
       - name: Deploy to AWS CloudFormation
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
-          name: BioSentinel
+          name: bio-sentinels
           template: ./cloudFormation.yaml
           no-fail-on-empty-changeset: "1"
