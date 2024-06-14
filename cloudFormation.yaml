@@ -271,28 +271,3 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-jupyter-notebooks"
-CloudWatchDashboard:
-    Type: 'AWS::CloudWatch::Dashboard'
-    Properties:
-      DashboardName: 'MyDashboard'
-      DashboardBody: !Sub |
-        {
-          "widgets": [
-            {
-              "type": "metric",
-              "x": 0,
-              "y": 0,
-              "width": 24,
-              "height": 6,
-              "properties": {
-                "metrics": [
-                  [ "AWS/EC2", "CPUUtilization", "InstanceId", "${Instance1}" ]
-                ],
-                "period": 300,
-                "stat": "Average",
-                "region": "${AWS::Region}",
-                "title": "EC2 Instance CPU Utilization"
-              }
-            }
-          ]
-        }
