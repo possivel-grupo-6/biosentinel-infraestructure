@@ -196,6 +196,30 @@ Resources:
           aws s3api put-object --bucket bucket-${AWS::StackName}-trusted --key pressao-arterial/
           aws s3api put-object --bucket bucket-${AWS::StackName}-trusted --key som/
           aws s3api put-object --bucket bucket-${AWS::StackName}-trusted --key presenca/
+          sudo apt install -y amazon-cloudwatch-agent
+          cat <<EOF > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+          {
+            "metrics": {
+              "append_dimensions": {
+                "InstanceId": "${aws:InstanceId}"
+              },
+              "metrics_collected": {
+                "mem": {
+                  "measurement": [
+                    "mem_used_percent"
+                  ],
+                  "metrics_collection_interval": 60
+                }
+              }
+            }
+          }
+          EOF
+          /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+            -a fetch-config \
+            -m ec2 \
+            -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json \
+            -s
+
       SecurityGroupIds:
         - !Ref InstanceSecurityGroup
       Tags:
@@ -245,3 +269,44 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-jupyter-notebooks"
+  CloudWatchDashboard:
+    Type: 'AWS::CloudWatch::Dashboard'
+    Properties:
+      DashboardName: 'MyDashboard'
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "AWS/EC2", "CPUUtilization", "InstanceId", "docker-node" ]
+                ],
+                "period": 300,
+                "stat": "Average",
+                "region": "${AWS::Region}",
+                "title": "EC2 Instance CPU Utilization"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 6,
+              "width": 24,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "CWAgent", "mem_used_percent", "InstanceId", "${MyEC2Instance}" ]
+                ],
+                "period": 300,
+                "stat": "Average",
+                "region": "${AWS::Region}",
+                "title": "EC2 Instance Memory Utilization"
+              }
+            }
+          ]
+        }
