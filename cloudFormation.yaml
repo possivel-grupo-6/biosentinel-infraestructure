@@ -201,7 +201,7 @@ Resources:
           {
             "metrics": {
               "append_dimensions": {
-                "InstanceId": "${aws:InstanceId}"
+                "InstanceId": "${Instance1}"
               },
               "metrics_collected": {
                 "mem": {
@@ -219,6 +219,8 @@ Resources:
             -m ec2 \
             -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json \
             -s
+
+
 
       SecurityGroupIds:
         - !Ref InstanceSecurityGroup
@@ -269,7 +271,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-jupyter-notebooks"
-  CloudWatchDashboard:
+CloudWatchDashboard:
     Type: 'AWS::CloudWatch::Dashboard'
     Properties:
       DashboardName: 'MyDashboard'
