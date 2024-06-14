@@ -284,7 +284,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ "AWS/EC2", "CPUUtilization", "InstanceId", "docker-node" ]
+                  [ "AWS/EC2", "CPUUtilization", "InstanceId", "${Instance1}" ]
                 ],
                 "period": 300,
                 "stat": "Average",
@@ -300,7 +300,7 @@ Resources:
               "height": 6,
               "properties": {
                 "metrics": [
-                  [ "CWAgent", "mem_used_percent", "InstanceId", "${MyEC2Instance}" ]
+                  [ "CWAgent", "mem_used_percent", "InstanceId", "${Instance1}" ]
                 ],
                 "period": 300,
                 "stat": "Average",
