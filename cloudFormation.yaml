@@ -201,7 +201,7 @@ Resources:
           {
             "metrics": {
               "append_dimensions": {
-                "InstanceId": "${aws:InstanceId}"
+                "InstanceId": "${!Ref Instance1}"
               },
               "metrics_collected": {
                 "mem": {
