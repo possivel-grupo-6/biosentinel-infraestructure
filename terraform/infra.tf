@@ -147,6 +147,15 @@ provisioner "remote-exec" {
 
 }
 
+resource "aws_s3_bucket" "bucket_raw" {
+  bucket = "bucket-${var.client}-raw"
+  acl    = "private"
+
+  tags = {
+    Name = "bucket-${var.client}-raw"
+  }
+}
+
 resource "aws_s3_bucket" "bucket_trusted" {
   bucket = "bucket-${var.client}-trusted"
   acl    = "private"
