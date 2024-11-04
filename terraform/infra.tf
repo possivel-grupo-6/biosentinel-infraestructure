@@ -131,6 +131,8 @@ provisioner "remote-exec" {
   inline = [
     "cd /tmp",
     "tar -xf /tmp/scripts.tar",  
+    "sudo yum install dos2unix -y",
+    "dos2unix /tmp/scripts/configjupyter.sh",
     "chmod +x /tmp/scripts/configjupyter.sh",       
     "bash /tmp/scripts/configjupyter.sh"
   ]
