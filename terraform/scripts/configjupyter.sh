@@ -31,3 +31,17 @@ sudo chmod +x /opt/jupyter/script/start.sh
 sudo systemctl daemon-reload
 sudo systemctl start jupyter
 sudo systemctl enable jupyter
+sudo pip3 install boto3
+sudo tee /lib/systemd/system/raw-monitor.service > /dev/null <<EOT
+[Unit]
+Description=Monitorar o bucket S3 e executar script PySpark
+
+[Service]
+ExecStart=/usr/bin/python3 /tmp/scripts/raw-monitor.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOT
+sudo systemctl enable monitor_s3.service
+sudo systemctl start monitor_s3.service
