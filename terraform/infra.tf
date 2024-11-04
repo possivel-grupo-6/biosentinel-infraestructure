@@ -32,16 +32,17 @@ resource "aws_subnet" "public" {
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
-
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
   tags = {
     Name = "${var.client}-public-rt"
   }
 }
-
-resource "aws_route" "internet_access" {
-  route_table_id         = aws_route_table.public.id
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.igw.id
+resource "aws_route_table_association" "rt_assoc_subnet_1" {
+  subnet_id      = aws_subnet.public.id
+  route_table_id = aws_route_table.public.id
 }
 
 resource "aws_security_group" "instance_sg" {
@@ -80,42 +81,13 @@ resource "aws_security_group" "instance_sg" {
   }
 }
 
-resource "tls_private_key" "docker_node_key" {
-  algorithm = "RSA"
-  rsa_bits  = 2048
-}
-
-resource "tls_private_key" "jupyter_key" {
-  algorithm = "RSA"
-  rsa_bits  = 2048
-}
-
-resource "local_file" "docker_node_private_key" {
-  content  = tls_private_key.docker_node_key.private_key_pem
-  filename = "${path.module}/docker_node_key.pem"
-}
-
-resource "local_file" "jupyter_private_key" {
-  content  = tls_private_key.jupyter_key.private_key_pem
-  filename = "${path.module}/jupyter_key.pem"
-}
-
-resource "aws_key_pair" "docker_node_key" {
-  key_name   = "docker_node_key"
-  public_key = tls_private_key.docker_node_key.public_key_openssh
-}
-
-resource "aws_key_pair" "jupyter_key" {
-  key_name   = "jupyter_key"
-  public_key = tls_private_key.jupyter_key.public_key_openssh
-}
 
 
 resource "aws_instance" "docker_node" {
   ami                    = var.ec2_ami_id
   instance_type          = "t3.small"
   subnet_id              = aws_subnet.public.id
-  key_name               = aws_key_pair.docker_node_key.key_name
+  key_name               = "ssh-key"
   iam_instance_profile   = var.ec2_iam_instance_profile
   vpc_security_group_ids = [aws_security_group.instance_sg.id]
 
@@ -128,13 +100,6 @@ resource "aws_instance" "docker_node" {
     sudo apt update -y
     sudo apt install -y docker.io python3 python3-pip git
     sudo pip3 install docker-compose
-    sudo apt install -y awscli
-    aws s3api put-object --bucket bucket-${var.client}-trusted --key geolocalizacao/
-    aws s3api put-object --bucket bucket-${var.client}-trusted --key temperatura-batimento/
-    aws s3api put-object --bucket bucket-${var.client}-trusted --key temperatura-umidade/
-    aws s3api put-object --bucket bucket-${var.client}-trusted --key pressao-arterial/
-    aws s3api put-object --bucket bucket-${var.client}-trusted --key som/
-    aws s3api put-object --bucket bucket-${var.client}-trusted --key presenca/
   EOF
 }
 
@@ -142,7 +107,7 @@ resource "aws_instance" "jupyter_notebook" {
   ami                    = var.ec2_ami_id
   instance_type          = "t2.small"
   subnet_id              = aws_subnet.public.id
-  key_name               = aws_key_pair.jupyter_key.key_name
+  key_name               = "ssh-key"
   iam_instance_profile   = var.ec2_iam_instance_profile
   vpc_security_group_ids = [aws_security_group.instance_sg.id]
 
@@ -150,32 +115,34 @@ resource "aws_instance" "jupyter_notebook" {
     Name = "${var.client}-jupyter-notebook"
   }
 
-  user_data = <<-EOF
-    #!/bin/bash
-    amazon-linux-extras install java-openjdk11 -y
-    curl -O https://dlcdn.apache.org/spark/spark-3.2.1/spark-3.2.1-bin-hadoop3.2.tgz
-    tar xzf spark-3.2.1-bin-hadoop3.2.tgz -C /usr/local --owner root --group root --no-same-owner
-    rm -rf spark-3.2.1-bin-hadoop3.2.tgz
-    mv /usr/local/spark-3.2.1-bin-hadoop3.2 /usr/local/spark
-    pip3 install pyspark --no-cache-dir
-    pip3 install jupyterlab --no-cache-dir
-    echo "[Unit]
-    Description=Jupyter Notebook
-    [Service]
-    Type=simple
-    ExecStart=/opt/jupyter/script/start.sh
-    Restart=always
-    RestartSec=10
-    [Install]
-    WantedBy=multi-user.target" > /lib/systemd/system/jupyter.service
-    mkdir -p /opt/jupyter/{notebook,script}
-    echo '#!/bin/bash
-    /usr/bin/python3 -m notebook --NotebookApp.notebook_dir=/opt/jupyter/notebook --NotebookApp.password=$(/usr/bin/python3 -c "from notebook.auth import passwd; print(passwd(\"${var.ec2_jupyter_password}\"))") --allow-root --ip 0.0.0.0 --port 80' > /opt/jupyter/script/start.sh
-    chmod +x /opt/jupyter/script/start.sh
-    systemctl daemon-reload
-    systemctl start jupyter
-    systemctl enable jupyter
-  EOF
+provisioner "file" {
+  source      = "scripts.tar"  
+  destination = "/tmp/scripts.tar"
+
+  connection {
+    type        = "ssh"
+    user        = "ec2-user"
+    private_key = file("ssh-key.pem")
+    host        = self.public_ip
+  }
+}
+
+provisioner "remote-exec" {
+  inline = [
+    "cd /tmp",
+    "tar -xf /tmp/scripts.tar",  
+    "chmod +x /tmp/scripts/configjupyter.sh",       
+    "bash /tmp/scripts/configjupyter.sh"
+  ]
+
+  connection {
+    type        = "ssh"
+    user        = "ec2-user"
+    private_key = file("ssh-key.pem")
+    host        = self.public_ip
+  }
+}
+
 }
 
 resource "aws_s3_bucket" "bucket_trusted" {
