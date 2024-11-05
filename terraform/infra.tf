@@ -97,9 +97,22 @@ resource "aws_instance" "docker_node" {
 
   user_data = <<-EOF
     #!/bin/bash
-    sudo apt update -y
-    sudo apt install -y docker.io python3 python3-pip git
+    # Atualizar pacotes
+    sudo yum update -y
+    
+    # Instalar Docker usando o amazon-linux-extras e Python3 com pip
+    sudo amazon-linux-extras install docker -y
+    sudo yum install -y python3 python3-pip git
+    
+    # Instalar Docker Compose
     sudo pip3 install docker-compose
+    
+    # Configurar o Docker para iniciar no modo daemon
+    sudo systemctl enable docker
+    sudo systemctl start docker
+    
+    # Adicionar o usuário ec2-user ao grupo Docker para evitar a necessidade de sudo
+    sudo usermod -aG docker ec2-user
   EOF
 }
 
@@ -110,6 +123,7 @@ resource "aws_instance" "jupyter_notebook" {
   key_name               = "ssh-key"
   iam_instance_profile   = var.ec2_iam_instance_profile
   vpc_security_group_ids = [aws_security_group.instance_sg.id]
+  depends_on = [ aws_s3_bucket.bucket_raw ]
 
   tags = {
     Name = "${var.client}-jupyter-notebook"

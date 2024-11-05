@@ -28,9 +28,7 @@ PASSWORD_HASH=\$(/usr/bin/python3 -c "from notebook.auth import passwd; print(pa
 /usr/bin/python3 -m notebook --NotebookApp.notebook_dir=/opt/jupyter/notebook --NotebookApp.password=\$PASSWORD_HASH --allow-root --ip 0.0.0.0 --port 80
 EOT
 sudo chmod +x /opt/jupyter/script/start.sh
-sudo systemctl daemon-reload
-sudo systemctl start jupyter
-sudo systemctl enable jupyter
+sudo chmod +x /tmp/scripts/raw-monitor.py
 sudo pip3 install boto3
 sudo tee /lib/systemd/system/raw-monitor.service > /dev/null <<EOT
 [Unit]
@@ -43,5 +41,8 @@ Restart=always
 [Install]
 WantedBy=multi-user.target
 EOT
-sudo systemctl enable monitor_s3.service
+sudo systemctl daemon-reload
+sudo systemctl start jupyter
+sudo systemctl enable jupyter
 sudo systemctl start monitor_s3.service
+sudo systemctl enable monitor_s3.service
