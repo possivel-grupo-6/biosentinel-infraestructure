@@ -32,6 +32,10 @@ PASSWORD_HASH=\$(/usr/bin/python3 -c "from notebook.auth import passwd; print(pa
 EOT
 sudo chmod +x /opt/jupyter/script/start.sh
 pip3 install boto3
+dos2unix /tmp/scripts/configure-cron-raw.sh
+dos2unix /tmp/scripts/configure-cron-trusted.sh
+dos2unix /opt/jupyter/notebook/auto-run/cron-raw.sh
+dos2unix /opt/jupyter/notebook/auto-run/cron-trusted.sh
 sudo systemctl daemon-reload
 sudo systemctl start jupyter
 sudo systemctl enable jupyter

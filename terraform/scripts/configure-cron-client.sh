@@ -1,8 +1,8 @@
 #!/bin/bash
-SCRIPT_PATH="/opt/jupyter/notebook/auto-run/cron-raw.sh"
-LOG_PATH="/opt/jupyter/logs/log-raw.txt"
+SCRIPT_PATH="/opt/jupyter/notebook/auto-run/cron-client.sh"
+LOG_PATH="/opt/jupyter/logs/log-client.txt"
 USER="ec2-user"
-CRON_SCHEDULE="*/10 * * * *"
+CRON_SCHEDULE="*1-59/10 * * * *"
 if [ ! -f "$SCRIPT_PATH" ]; then
   echo "Erro: O script $SCRIPT_PATH não foi encontrado."
   exit 1
