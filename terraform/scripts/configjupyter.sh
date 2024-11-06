@@ -32,14 +32,18 @@ PASSWORD_HASH=\$(/usr/bin/python3 -c "from notebook.auth import passwd; print(pa
 EOT
 sudo chmod +x /opt/jupyter/script/start.sh
 pip3 install boto3
+sudo systemctl daemon-reload
+sudo systemctl start jupyter
+sudo systemctl enable jupyter
 dos2unix /tmp/scripts/configure-cron-raw.sh
 dos2unix /tmp/scripts/configure-cron-trusted.sh
 dos2unix /opt/jupyter/notebook/auto-run/cron-raw.sh
 dos2unix /opt/jupyter/notebook/auto-run/cron-trusted.sh
-sudo systemctl daemon-reload
-sudo systemctl start jupyter
-sudo systemctl enable jupyter
+dos2unix /opt/jupyter/notebook/auto-run/cron-client.sh
+dos2unix /opt/jupyter/notebook/auto-run/configure-cron-client.sh
 sudo chmod +x /tmp/scripts/configure-cron-raw.sh
 sudo chmod +x /tmp/scripts/configure-cron-trusted.sh
+sudo chmod +x /tmp/scripts/configure-cron-client.sh
 bash /tmp/scripts/configure-cron-raw.sh
 bash /tmp/scripts/configure-cron-trusted.sh
+bash /tmp/scripts/cron-client.sh
