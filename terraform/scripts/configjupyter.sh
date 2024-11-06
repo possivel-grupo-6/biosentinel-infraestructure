@@ -20,7 +20,10 @@ RestartSec=10
 [Install]
 WantedBy=multi-user.target
 EOT
-sudo mkdir -p /opt/jupyter/{notebook,script}
+sudo mkdir -p /opt/jupyter/{notebook,script,logs}
+sudo mkdir -p /opt/jupyter/notebook/auto-run
+sudo chmod 777 -R /opt/jupyter/
+sudo mv /tmp/scripts/cron-raw.sh /tmp/scripts/cron-trusted.sh /opt/jupyter/notebook/auto-run
 sudo mv /tmp/scripts/move_client_db.ipynb /tmp/scripts/move_raw_trusted.ipynb /tmp/scripts/move_trusted_client.ipynb /opt/jupyter/notebook
 sudo tee /opt/jupyter/script/start.sh > /dev/null <<EOT
 #!/bin/bash
@@ -28,21 +31,11 @@ PASSWORD_HASH=\$(/usr/bin/python3 -c "from notebook.auth import passwd; print(pa
 /usr/bin/python3 -m notebook --NotebookApp.notebook_dir=/opt/jupyter/notebook --NotebookApp.password=\$PASSWORD_HASH --allow-root --ip 0.0.0.0 --port 80
 EOT
 sudo chmod +x /opt/jupyter/script/start.sh
-sudo chmod +x /tmp/scripts/raw-monitor.py
-sudo pip3 install boto3
-sudo tee /lib/systemd/system/raw-monitor.service > /dev/null <<EOT
-[Unit]
-Description=Monitorar o bucket S3 e executar script PySpark
-
-[Service]
-ExecStart=/usr/bin/python3 /tmp/scripts/raw-monitor.py
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOT
+pip3 install boto3
 sudo systemctl daemon-reload
 sudo systemctl start jupyter
 sudo systemctl enable jupyter
-sudo systemctl start monitor_s3.service
-sudo systemctl enable monitor_s3.service
+sudo chmod +x /tmp/scripts/configure-cron-raw.sh
+sudo chmod +x /tmp/scripts/configure-cron-trusted.sh
+bash /tmp/scripts/configure-cron-raw.sh
+bash /tmp/scripts/configure-cron-trusted.sh

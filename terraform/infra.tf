@@ -148,7 +148,7 @@ provisioner "remote-exec" {
     "sudo yum install dos2unix -y",
     "dos2unix /tmp/scripts/configjupyter.sh",
     "chmod +x /tmp/scripts/configjupyter.sh",       
-    "bash /tmp/scripts/configjupyter.sh"
+    "bash /tmp/scripts/configjupyter.sh"    
   ]
 
   connection {

@@ -1,6 +1,6 @@
 variable "client" {
   type    = string
-  default = "bio-sentinel"
+  default = "biosentinel"
 }
 
 variable "vpc_cidr" {
