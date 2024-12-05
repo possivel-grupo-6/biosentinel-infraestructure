@@ -1,0 +1,16 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+*.backup
+*.tfplan
+
+# Diretórios de estado
+.terraform/
+.terraform.lock.hcl
+
+# Arquivos de configuração do editor
+*.swp
+*.swo
+.DS_Store
