@@ -2,9 +2,10 @@ FROM amazonlinux:2
 
 # Atualiza o sistema e instala dependências
 RUN amazon-linux-extras enable python3.8 && \
-    yum install -y python3.8 tar java-11-openjdk && \
+    yum install -y python3.8 tar java-11-openjdk gzip && \
     python3.8 -m pip install --upgrade pip && \
     pip3 install pyspark jupyterlab boto3 --no-cache-dir
+
 
 # Configura o Apache Spark
 RUN curl -O https://downloads.apache.org/spark/spark-3.5.3/spark-3.5.3-bin-hadoop3.tgz && \
