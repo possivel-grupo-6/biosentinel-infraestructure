@@ -33,6 +33,7 @@ IP_ADDRESS=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://instance-data/lat
 
 # Instalar dependências
 sudo apt-get update
+sudo apt install awscli -y
 sudo apt-get install -y unzip tree redis-tools jq curl tmux apt-transport-https ca-certificates gnupg2 software-properties-common
 sudo apt-get clean
 sudo ufw disable || echo "ufw não instalado"
@@ -224,6 +225,8 @@ consul acl policy create -name "vault-policy" -rules @vault-policy.hcl
 
 consul acl token create -description "Token de acesso do vault" -policy-name "vault-policy" -secret "$VAULT_TOKEN"
 
+sleep 30
+
 echo "Aguardando o Vault ficar acessível..."
 export VAULT_ADDR="http://127.0.0.1:8200"
 until curl -s $VAULT_ADDR/v1/sys/seal-status; do
@@ -253,7 +256,7 @@ if vault status | grep -q 'Sealed.*true'; then
   vault operator unseal "$UNSEAL_KEY"
 fi
 
-if ! vault status | grep -q "Leader *true"; then
+if ! vault status | grep -q "Leader true"; then
   echo "Este nó não é o líder do cluster Vault. Redirecionando para o líder..."
   LEADER_ADDR=$(curl -s http://127.0.0.1:8200/v1/sys/leader | jq -r '.leader_address')
   export VAULT_ADDR=$LEADER_ADDR
@@ -265,53 +268,75 @@ cat > nomad-policy.hcl <<EOL
 path "secret/*" {
   capabilities = ["read", "list"]
 }
-
 path "auth/approle/login" {
   capabilities = ["create", "read"]
+}
+path "kv/data/*" {
+  capabilities = ["read"]
 }
 EOL
 
 vault policy write nomad-policy nomad-policy.hcl
 
+# Criar uma política para métricas do Prometheus
 vault policy write prometheus-metrics - << EOF
 path "/sys/metrics" {
   capabilities = ["read"]
 }
 EOF
 
+# Criar um token para o Prometheus
 vault token create \
   -field=token \
   -policy prometheus-metrics \
-  > /home/ubuntu/prometheus-token
+  > /home/ubuntu/prometheus-token.txt
+
+vault secrets enable -version=2 kv
+
+# Variáveis
+ARQUIVO="/home/ubuntu/prometheus-token.txt"
+CAMINHO_SECRET="prometheus-token"  # Caminho do secret no Vault
+
+# Lê o conteúdo do arquivo
+TOKEN=$(cat "$ARQUIVO")
+
+# Grava o conteúdo no Vault
+vault kv put "$CAMINHO_SECRET" token="$TOKEN"
+
+# Mensagem de sucesso
+echo "Token enviado para o Vault no caminho: $CAMINHO_SECRET"
+
+
+# Habilitar AppRole para Nomad
+vault auth enable approle
 
 # Criar um AppRole para o Nomad
-vault auth enable approle
-vault write auth/approle/role/nomad \
-  token_ttl=1h \
-  token_max_ttl=4h \
+vault write auth/approle/role/nomad-cluster \
+  disallowed_policies="nomad-server" \
+  token_explicit_max_ttl=0 \
+  orphan=true \
+  token_period=259200 \
+  renewable=true \
   policies="nomad-policy"
 
 # Recuperar o RoleID e SecretID
-ROLE_ID=$(vault read -field=role_id auth/approle/role/nomad/role-id)
-SECRET_ID=$(vault write -field=secret_id -f auth/approle/role/nomad/secret-id)
+ROLE_ID=$(vault read -field=role_id auth/approle/role/nomad-cluster/role-id)
+SECRET_ID=$(vault write -field=secret_id -f auth/approle/role/nomad-cluster/secret-id)
 
 # Salvar RoleID e SecretID para o Nomad
 echo "$ROLE_ID" > nomad-role-id.txt
 echo "$SECRET_ID" > nomad-secret-id.txt
 
-# Substituir o RoleID e SecretID no arquivo nomad.hcl
-ROLE_ID=$(cat nomad-role-id.txt)
-SECRET_ID=$(cat nomad-secret-id.txt)
-
+# Substituir RoleID e SecretID no arquivo Nomad HCL
 sudo sed -i "s/ROLE_ID/$ROLE_ID/g" "$NOMAD_CONFIG_DIR/nomad.hcl"
 sudo sed -i "s/SECRET_ID/$SECRET_ID/g" "$NOMAD_CONFIG_DIR/nomad.hcl"
 
-# Criação de local para o grafana
-
+# Criar diretório para Grafana
 sudo mkdir -p /opt/grafana/
 sudo chown -R 472:472 /opt/grafana
 sudo chmod -R 755 /opt/grafana
 
+echo "Configuração concluída com sucesso."
 
 # config do dns
 

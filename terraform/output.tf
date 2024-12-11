@@ -36,5 +36,8 @@ with the token: ${random_uuid.Consul_token.result}
 export CONSUL_HTTP_ADDR=http://${aws_instance.server[0].public_ip}:8500 && \
 export CONSUL_HTTP_TOKEN=${random_uuid.Consul_token.result}
 
+export VAULT_ADDR=http://${aws_instance.server[0].public_ip}:8200
+export VAULT_TOKEN=
+
 CONFIGURATION
 }

@@ -170,7 +170,7 @@ resource "aws_security_group" "clients_ingress" {
   }
   ingress {
     from_port   = 8000
-    to_port     = 8000
+    to_port     = 8003
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -183,6 +183,36 @@ resource "aws_security_group" "clients_ingress" {
     ingress {
     from_port   = 9998
     to_port     = 9999
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+    ingress {
+    from_port   = 9093
+    to_port     = 9093
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+    ingress {
+    from_port   = 3100
+    to_port     = 3100
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+    ingress {
+    from_port   = 3200
+    to_port     = 3200
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+    ingress {
+    from_port   = 3400
+    to_port     = 3400
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+    ingress {
+    from_port   = 6831
+    to_port     = 6831
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -341,7 +371,7 @@ resource "aws_instance" "server" {
     consul_token_id           = random_uuid.Consul_token.result
     nomad_token_id            = random_uuid.nomad_token.result
     vault_token_id            = random_uuid.vault_token.result
-
+    bucket_name               = aws_s3_bucket.bucket_recovery.bucket
   })
 
   metadata_options {
@@ -413,6 +443,7 @@ resource "aws_instance" "client" {
     consul_token_id           = random_uuid.Consul_token.result
     nomad_token_id            = random_uuid.nomad_token.result
     vault_token_id            = random_uuid.vault_token.result
+    bucket_name               = aws_s3_bucket.bucket_recovery.bucket
   })
 
   metadata_options {
@@ -445,5 +476,13 @@ resource "aws_s3_bucket" "bucket_client" {
 
   tags = {
     Name = "bucket-${var.name}-client"
+  }
+}
+resource "aws_s3_bucket" "bucket_recovery" {
+  bucket = "bucket-${var.name}-recovery"
+  acl    = "private"
+
+  tags = {
+    Name = "bucket-${var.name}-recovery"
   }
 }

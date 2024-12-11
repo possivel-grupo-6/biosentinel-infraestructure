@@ -29,11 +29,12 @@ vault {
   enabled = true
   address = "http://127.0.0.1:8200"
   auth_method = "approle"
-
+  task_token_ttl = "1h"
   approle {
     role_id   = "ROLE_ID"
     secret_id = "SECRET_ID"
-  } 
+  }
+  create_from_role = "nomad-cluster"
 }
 
 telemetry {

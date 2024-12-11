@@ -28,6 +28,10 @@ telemetry {
  
 client {
   enabled = true
+  host_volume "nomad_data" {
+    path      = "/opt/nomad/data"
+    read_only = false
+  }
   options {
     "driver.raw_exec.enable"    = "1"
     "docker.privileged.enabled" = "true"
@@ -41,7 +45,10 @@ client {
     read_only = false
   }
 }
-
+vault {
+  enabled = true
+  address = "http://127.0.0.1:8200"
+}
 consul {
   address = "127.0.0.1:8500"
   client_service_name = "nomad-client"

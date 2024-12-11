@@ -13,19 +13,17 @@ job "alertmanager" {
     ephemeral_disk {
       size = 300
     }
+    network {
+      port "alertmanager_ui" {
+        static = 9093
+      }
+    }
 
     task "alertmanager" {
       driver = "docker"
       config {
         image = "prom/alertmanager:latest"
         ports = ["alertmanager_ui"]
-      }
-      resources {
-        network {
-          port "alertmanager_ui" {
-            static = 9093
-          }
-        }
       }
       service {
         name = "alertmanager"

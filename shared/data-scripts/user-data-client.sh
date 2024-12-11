@@ -31,6 +31,7 @@ VAULT_TOKEN=${vault_token_id}
 
 # Instala dependências iniciais
 sudo apt-get update
+sudo apt install awscli -y
 sudo apt-get install -y unzip jq curl software-properties-common apt-transport-https ca-certificates gnupg2
 
 # Obtém IP da instância EC2
