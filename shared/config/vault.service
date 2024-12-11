@@ -1,0 +1,19 @@
+[Unit]
+Description="HashiCorp Vault - A tool for managing secrets"
+Documentation=https://www.vaultproject.io/docs/
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+User=vault
+Group=vault
+ExecStart=/usr/local/bin/vault server -config=/etc/vault.d/vault.hcl
+ExecReload=/bin/kill --signal HUP $MAINPID
+KillMode=process
+Restart=on-failure
+LimitMEMLOCK=infinity
+StandardOutput=/var/log/vault.log
+StandardError=/var/log/vault.log
+
+[Install]
+WantedBy=multi-user.target
